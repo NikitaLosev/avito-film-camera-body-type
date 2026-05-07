@@ -1,0 +1,9 @@
+﻿row,label_photo_only,conf_photo_only,label_text_only,conf_text_only,label_full,winning_modality,note
+6,compact_point_and_shoot,5,other_unknown,2,compact_point_and_shoot,photo,"На фото обычная compact. В тексте только ""Premier PC-661"", без класса корпуса."
+13,SLR,5,SLR,5,SLR,both,"Фото и описание сходятся: SLR, в тексте есть ""зеркальная пленочная камера""."
+14,other_unknown,2,SLR,4,SLR,text,"Главное фото похоже на чехол, без текста класс не выбрал бы. Текст ""Зенит ттл"" дает SLR."
+24,instant,5,instant,4,instant,both,"Polaroid видно по фото. Заголовок пустой, описание тоже помогает."
+33,compact_point_and_shoot,4,other_unknown,2,compact_point_and_shoot,photo,"Текст сбивает из-за ""зарядник утерян"". По фото оставил compact, но в основной таблице conf=3."
+38,other_unknown,2,other_unknown,1,other_unknown,neither,Только коробки/упаковка Kodak Charmera. По тексту класс корпуса не понять.
+43,other_unknown,4,other_unknown,5,other_unknown,both,"Лот из разных классов: Зенит + Смена, поэтому не выбираю один тип."
+49,TLR,5,TLR,3,TLR,photo,"На фото очевидный TLR. По тексту держится в основном на модели ""Любитель 166""."

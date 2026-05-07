@@ -1,0 +1,50 @@
+﻿row,title_short,is_camera,label,conf_1_5,title_keyword,brand_model_in_title,main_photo_enough,is_hard,comment
+1,Canon EOS Elan 7 (EOS 30) body,yes,SLR,5,no,yes,yes,yes,"body only, пленочная зеркальная камера"
+2,Пленочный фотоаппарат Зоркий 6,yes,rangefinder_viewfinder,4,no,yes,no,no,главное фото - чехол; камера видна только на дополнительных фото/по модели
+3,Пленочный фотоаппарат pentax zoom 90,yes,compact_point_and_shoot,5,no,yes,yes,yes,компактная zoom-модель
+4,Фотоаппарат Premier BF80,yes,compact_point_and_shoot,5,no,yes,yes,yes,простая компактная камера со вспышкой
+5,Kodak FunSaver Одноразовый пленочный фотоаппарат,yes,compact_point_and_shoot,5,yes,yes,partial,no,одноразовая пленочная камера; главное фото - коробка
+6,Фотоаппарат,yes,compact_point_and_shoot,5,no,no,yes,yes,в описании Premier PC-661; title без бренда/модели
+7,Canon Prima BF800 zoom,yes,compact_point_and_shoot,5,no,yes,yes,yes,
+8,Фотоаппарат зенит 11,yes,SLR,5,no,yes,yes,yes,
+9,Фотоаппарат Polaroid impulse,yes,instant,5,no,yes,yes,yes,Polaroid не считал title_keyword по правилу
+10,Пленочный фотоаппарат зенит е,yes,SLR,4,no,yes,partial,yes,"главное фото мелкое/размытое, но форма SLR видна"
+11,Nikon FM2/T + Nikkor-S 50mm f/1.4,yes,SLR,5,no,yes,yes,yes,камера с объективом в комплекте
+12,Пленочный фотоаппарат Canon Prima Mini II,yes,compact_point_and_shoot,5,no,yes,yes,yes,
+13,Пленочная камера RevueFlex ACX (Chinon CA-4),yes,SLR,5,no,yes,yes,yes,"в описании указано ""зеркальная"", но не в title"
+14,Фотоаппарат Зенит ттл,yes,SLR,4,no,yes,no,no,главное фото - чехол; камера видна на дополнительных фото/по модели
+15,Тушки от фотоаппаратов/ Фотоаппараты Смена,yes,other_unknown,5,no,yes,yes,no,лот из нескольких камер разных типов: Заря/ФЭД/Зенит/Смена
+16,Instax mini 11,yes,instant,5,yes,yes,yes,no,Instax считал title_keyword по заданному списку
+17,Фотоаппарат пленочный Canon EOS 5 (a2/a2e),yes,SLR,5,no,yes,yes,yes,body/tушка без объектива
+18,"Nikon FE, FM нерабочие",yes,SLR,5,no,yes,yes,yes,"две нерабочие SLR-камеры, лот"
+19,Instax mini 11 с картриджами,yes,instant,5,yes,yes,yes,no,Instax считал title_keyword по заданному списку; есть картриджи
+20,Фотоаппарат смена 8м,yes,rangefinder_viewfinder,4,no,yes,no,no,главное фото - чехол; модель/описание указывают Смена 8М
+21,Фотоаппарат Киев + Юпитер 12 красная П,yes,rangefinder_viewfinder,5,no,yes,yes,yes,
+22,Charman m-102 + kodak в подарок,yes,compact_point_and_shoot,5,no,yes,yes,yes,компактная focus-free 35mm; Kodak в подарок
+23,Фотоаппарат Электра 112,yes,rangefinder_viewfinder,4,no,yes,yes,yes,советская пленочная камера; электроника не проверялась
+24,Фотоаппарат,yes,instant,5,no,no,yes,yes,в описании Polaroid; title без бренда/модели
+25,Фотоаппарат toma M-616,yes,compact_point_and_shoot,5,no,yes,yes,yes,
+26,Фотоаппараты зенит зоркий,yes,other_unknown,5,no,yes,partial,no,лот из нескольких камер разных типов: Zenit + Zorkiy
+27,Фотоаппарат Skina,yes,compact_point_and_shoot,5,no,yes,yes,yes,
+28,Фотоаппарат Fujifilm Instax Mini 12 Синий,yes,instant,5,yes,yes,partial,no,главное фото - коробка; Instax считал title_keyword по заданному списку
+29,Фотоаппарат sea sea mx-5 2,yes,compact_point_and_shoot,5,no,yes,yes,yes,подводная компактная камера с кофром
+30,Фотоаппарат Olympus trip 505,yes,compact_point_and_shoot,5,no,yes,yes,yes,
+31,Фотоаппарат чайка 3 объектив индустар-69,yes,rangefinder_viewfinder,4,no,yes,yes,yes,советская полукадровая/видоискательная камера
+32,Fujifilm Instax wide 400,yes,instant,5,yes,yes,partial,no,главное фото - коробка; Instax считал title_keyword по заданному списку
+33,Фотоаппарат,yes,compact_point_and_shoot,3,no,no,yes,yes,"в описании Konica fx 700 и ""зарядник утерян""; похоже цифровая компактная камера"
+34,Фотоаппарат зоркий,yes,rangefinder_viewfinder,5,no,yes,yes,yes,Зоркий-1; дальномер указан рабочим в описании
+35,Фотоаппарат Olympus trip 505,yes,compact_point_and_shoot,5,no,yes,yes,yes,дубль/похожее объявление Olympus Trip 505
+36,Polaroid 636,yes,instant,4,no,yes,partial,yes,главное фото - коробка; Polaroid не считал title_keyword по правилу
+37,Instax mini розовый для фотосессии,yes,instant,5,yes,yes,yes,no,объявление про аренду для фотосессии; Instax считал title_keyword по заданному списку
+38,Kodak Charmera,unclear,other_unknown,2,no,yes,no,no,на главном фото только коробки/упаковка; класс камеры не виден
+39,Пленочный фотоаппарат kodak m35,yes,compact_point_and_shoot,5,no,yes,yes,yes,
+40,"Фкд 13х18, 2 кассеты, объектив",yes,other_unknown,5,no,yes,yes,no,форматная камера + объектив + кассеты; тип вне заданных классов
+41,Фотоаппараты Polaroid,yes,instant,5,no,yes,yes,yes,два Polaroid одним лотом; Polaroid не считал title_keyword по правилу
+42,Nikon F55,yes,SLR,5,no,yes,yes,yes,"в описании указано ""зеркальная пленочная камера"", но не в title"
+43,"Пленочные фотоаппараты зенит, смена",yes,other_unknown,5,no,yes,partial,no,лот из двух разных типов: Зенит ЕТ и Смена 8М
+44,Polaroid 636 closeup,yes,instant,5,no,yes,yes,yes,"в title Polaroid, но это не title_keyword по правилу"
+45,Фотопленка негативы,no,other_unknown,5,no,no,yes,no,"только фотопленка/негативы, камеры нет"
+46,Пленочный фотоаппарат olympus trip 500,yes,compact_point_and_shoot,5,no,yes,yes,yes,
+47,Фотоаппарат zenit 11 + Гелиос-44М,yes,SLR,5,no,yes,yes,yes,камера с объективом
+48,Canon demi EE28 Полукадровый фотоаппарат,yes,rangefinder_viewfinder,5,yes,yes,yes,no,полукадровая компактная/видоискательная камера; keyword=полукадровый
+49,Любитель 166 Олимпийский,yes,TLR,5,no,yes,yes,yes,двухобъективная камера видна на главном фото
