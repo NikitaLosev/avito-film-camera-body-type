@@ -1,0 +1,25 @@
+{
+  "n_rows": 49,
+  "real_cameras": 47,
+  "category_purity": 0.9592,
+  "labelable_real_cameras": 43,
+  "labelable_rate_among_real_cameras": 0.9149,
+  "top_class": "compact_point_and_shoot",
+  "top_class_share_among_real_cameras": 0.3191,
+  "strict_class_word_regex_rate": 0.0408,
+  "keyword_proxy_rate": 0.1429,
+  "brand_model_in_title_rate": 0.9184,
+  "main_photo_enough_rate": 0.7755,
+  "main_photo_yes_partial_rate": 0.9184,
+  "hard_cases_n": 8,
+  "photo_only_match_full": 0.875,
+  "text_only_match_full": 0.75,
+  "winning_modality_counts": {
+    "фото и текст": 3,
+    "фото": 3,
+    "текст": 1,
+    "нет ответа": 1
+  },
+  "category_count_manual_snapshot": 59758,
+  "estimated_labelable_ads_from_sample": 52440
+}
