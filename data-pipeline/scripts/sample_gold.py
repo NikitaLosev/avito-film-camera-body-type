@@ -1,9 +1,9 @@
-'''Отбирает ~500 объявлений для ручной разметки
+"""Отбирает ~500 объявлений для ручной разметки
 
 Стратифицирует выборку грубыми regex по title (slr/tlr/rangefinder/instant/compact)
 чтобы в gold попали все классы а не одни мыльницы и Instax
 Сохраняет gold.parquet с пустыми колонками разметки по схеме из data/taxonomy.yaml
-'''
+"""
 
 import re
 from pathlib import Path

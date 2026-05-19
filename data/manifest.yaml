@@ -1,0 +1,87 @@
+project: film-camera-body-type
+generated_at: '2026-05-19T16:19:42.493384'
+model: gemini-3.1-flash-lite
+prompt_version: v3_with_vision
+prompt_sha256: 19e667536db0d171a50a83970a099745ce5e43427c2f949e198a0ef8e418a9d9
+cache_id: null
+batch_jobs: {}
+artifacts:
+  raw_csv:
+    path: data/raw/items_project_aaa.csv
+    sha256: 8b9f42e58962938e05015bcc7e445737079b9f399b5be2e4d841c94e4b13e34d
+    exists: true
+  items_parquet:
+    path: data/labeling/items.parquet
+    sha256: 71a2a739000e148466b2fa5ca9c4dd9e22b8ce45a832e572e381cfbb7607d664
+    exists: true
+    rows: 144313
+    parent:
+    - raw_csv
+  gold_parquet:
+    path: data/labeling/gold.parquet
+    sha256: 010efc1eb08d301984ca265735a244c45883cc4c612fd1f6ba86e099a4e90df8
+    exists: true
+    rows: 471
+    parent:
+    - items_parquet
+  taxonomy_yaml:
+    path: data/taxonomy.yaml
+    sha256: 315ecb26ac80fb2a4829af474756a7501a2e4af868e1301c1a7b182f2f4d9427
+    exists: true
+  kb_yaml:
+    path: data/labeling/kb.yaml
+    sha256: 87fa5e91d950f4573ee71bfd5b9d0f3ac8aa0eca72f3df2562c7af2d2dc5d941
+    exists: true
+    parent:
+    - gold_parquet
+  kb_labels:
+    path: data/labeling/kb_labels.parquet
+    sha256: 00af99b5faf86e58a45df4446fa9e7bcb328057b6cbdb53cdba8c4f79e1e9e57
+    exists: true
+    rows: 144313
+    parent:
+    - items_parquet
+    - kb_yaml
+  gold_dev:
+    path: data/labeling/gold_dev.parquet
+    sha256: ce3b3f262862d2f88523fb9d9701d6d0d3f088f8b95337ad470fabc3a165dcbe
+    exists: true
+    rows: 330
+    parent:
+    - gold_parquet
+  gold_holdout:
+    path: data/labeling/gold_holdout.parquet
+    sha256: d0f54459697d14c6430f8571264b91cf098b27242b3c0c24c64b9d362b31005f
+    exists: true
+    rows: 141
+    parent:
+    - gold_parquet
+  image_uris:
+    path: data/labeling/image_uris.parquet
+    sha256: null
+    exists: false
+    rows: null
+  llm_labels:
+    path: data/labeling/llm_labels.parquet
+    sha256: 423a13faad28f0de27ec9dbb189248b72045860bd3bb5c7d406e8d9e6396982c
+    exists: true
+    rows: 88778
+    parent:
+    - items_parquet
+    - kb_labels
+  labels_final:
+    path: data/training/labels_final.parquet
+    sha256: 796ce132b3abc9fec35b5e3de8ccdfe2b0a8c3136a4785f0a478a2165fc32cdb
+    exists: true
+    rows: 144313
+    parent:
+    - gold_parquet
+    - kb_labels
+    - llm_labels
+  audit_sample:
+    path: data/labeling/audit_sample.parquet
+    sha256: cb486b3a79377b3f848bd9b6801e5637e6c703d054dd082ce0bf4f01f501a3ed
+    exists: true
+    rows: 210
+    parent:
+    - labels_final

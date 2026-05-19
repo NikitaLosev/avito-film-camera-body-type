@@ -1,8 +1,8 @@
-'''Собирает справочник "модель камеры -> класс" из ручной разметки gold.parquet
+"""Собирает справочник "модель камеры -> класс" из ручной разметки gold.parquet
 
 Берёт строки с object_status='valid_single_film_camera' где model_name заполнено,
 нормализует написания через text_norm.normalize и пишет в data/labeling/kb.yaml
-'''
+"""
 
 from pathlib import Path
 

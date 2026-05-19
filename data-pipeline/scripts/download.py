@@ -1,4 +1,4 @@
-'''Скачивает все файлы из бакета RustFS в data/raw'''
+"""Скачивает все файлы из бакета RustFS в data/raw"""
 
 import os
 from pathlib import Path

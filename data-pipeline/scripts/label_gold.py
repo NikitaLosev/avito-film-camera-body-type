@@ -1,8 +1,8 @@
-'''Интерактивная разметка gold.parquet
+"""Интерактивная разметка gold.parquet
 
 Запускай ячейки (# %%) в VS Code interactive python или в Jupyter
 Цикл: смотришь карточку через show() -> ставишь метку через lbl() -> сам перейдёт к следующей
-'''
+"""
 
 # %% setup
 from pathlib import Path
