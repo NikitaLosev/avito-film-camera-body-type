@@ -1,7 +1,7 @@
-"""Интерактивная разметка gold.parquet
+"""Ручная разметка gold.parquet в Jupyter
 
-Запускай ячейки (# %%) в VS Code interactive python или в Jupyter
-Цикл: смотришь карточку через show() -> ставишь метку через lbl() -> сам перейдёт к следующей
+Открывай ячейки (# %%) в VS Code interactive python или Jupyter
+Цикл: смотришь карточку через show() -> ставишь метку через lbl() -> перейдёт к следующей
 """
 
 # %% setup
@@ -16,7 +16,7 @@ assert (ROOT / 'data').exists(), f'запускай из корня проект
 GOLD = ROOT / 'data' / 'labeling' / 'gold.parquet'
 IMG_DIR = ROOT / 'data' / 'raw' / 'image'
 
-# короткие алиасы для object_status (полный список - в data/taxonomy.yaml)
+# короткие алиасы для object_status (полный список в data/taxonomy.yaml)
 STATUS = {
     'v': 'valid_single_film_camera',
     'lot': 'multi_camera_lot',
@@ -82,7 +82,7 @@ show(i)
 
 
 # %% разметить и перейти к следующей (эту ячейку гоняешь по кругу)
-# примеры:
+# примеры вызовов:
 #   i = lbl(i, 'v', 'slr', model='Зенит TTL', ev='в заголовке')
 #   i = lbl(i, 'v', 'inst', model='Polaroid 636', ev='в заголовке')
 #   i = lbl(i, 'lot', ev='в объявлении 3 камеры')

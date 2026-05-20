@@ -1,8 +1,9 @@
-"""Финальный замер промпта на gold_holdout (141 закрытая строка)
+"""Финальный честный замер промпта на gold_holdout (141 закрытая строка)
 
 Использование: python eval_holdout.py <prompt_name>  (по умолчанию v3_with_vision)
-Holdout не видел при тюнинге - это честный замер precision для отчёта
-Это смайл но на всём holdout и без ограничения на N
+Holdout не виден во время тюнинга, поэтому замер на нём - честная цифра
+precision для отчёта. Логика как у smoke_test, но без ограничения на N и
+по всему holdout
 """
 
 import os
@@ -13,87 +14,46 @@ from pathlib import Path
 import pandas as pd
 from dotenv import load_dotenv
 from google import genai
-from google.genai import errors, types
+from google.genai import types
 
-sys.path.insert(0, str(Path(__file__).parent))
-from schema import LabelResponse, is_business_valid
-
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-HOLDOUT = PROJECT_ROOT / 'data' / 'labeling' / 'gold_holdout.parquet'
-IMG_DIR = PROJECT_ROOT / 'data' / 'raw' / 'image'
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib import gemini
+from lib.paths import (ENV_FILE, GOLD_HOLDOUT, IMG_DIR, PROJECT_ROOT,
+                       PROMPTS_DIR)
+from lib.schema import is_business_valid
 
 PROMPT_NAME = sys.argv[1] if len(sys.argv) > 1 else 'v3_with_vision'
-PROMPT = Path(__file__).parent / 'prompts' / f'{PROMPT_NAME}.md'
+PROMPT = PROMPTS_DIR / f'{PROMPT_NAME}.md'
 OUT = PROJECT_ROOT / 'data' / 'labeling' / f'llm_holdout_{PROMPT_NAME}.parquet'
 USE_IMAGES = 'vision' in PROMPT_NAME
 
-MODEL = 'gemini-3.1-flash-lite'
-SLEEP = 1.5
+SLEEP_SEC = 1.5
 CACHE_TTL = '3600s'
-
-PRICE_IN = 0.25 / 1e6
-PRICE_CACHED = 0.025 / 1e6
-PRICE_OUT = 1.50 / 1e6
 MAX_USD = 0.30
 
 
-def call(client, cache_name, contents, retries=5):
-    for attempt in range(retries):
-        try:
-            return client.models.generate_content(
-                model=MODEL,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    cached_content=cache_name,
-                    response_mime_type='application/json',
-                    response_schema=LabelResponse,
-                    temperature=0,
-                    max_output_tokens=200,
-                ),
-            )
-        except (errors.ServerError, errors.APIError) as e:
-            if attempt == retries - 1:
-                raise
-            wait = 2 ** attempt * 5
-            print(f' [retry {attempt+1}/{retries} after {wait}s: {type(e).__name__}]', end='', flush=True)
-            time.sleep(wait)
-
-
-def image_part(image_id):
-    p = IMG_DIR / str(image_id % 1000) / f'{image_id}.jpg'
-    return types.Part.from_bytes(data=p.read_bytes(), mime_type='image/jpeg')
-
-
-def parse(raw):
-    try:
-        return LabelResponse.model_validate_json(raw), None
-    except Exception as e:
-        return None, str(e)
-
-
 def main():
-    load_dotenv(PROJECT_ROOT / '.env')
+    load_dotenv(ENV_FILE)
     if 'GEMINI_API_KEY' not in os.environ:
         sys.exit('GEMINI_API_KEY не задан в .env')
 
     client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
     template = PROMPT.read_text()
-    marker = '# ОБЪЯВЛЕНИЕ ДЛЯ РАЗМЕТКИ'
-    static_part, dynamic_template = template.split(marker)
+    static_part, dynamic_template = gemini.split_prompt(template)
 
-    df = pd.read_parquet(HOLDOUT)
+    df = pd.read_parquet(GOLD_HOLDOUT)
     n = len(df)
     print(f'промпт: {PROMPT_NAME}, holdout строк: {n}, с фото: {USE_IMAGES}')
 
     cache = client.caches.create(
-        model=MODEL,
+        model=gemini.MODEL,
         config=types.CreateCachedContentConfig(
-            system_instruction=static_part.strip(),
+            system_instruction=static_part,
             ttl=CACHE_TTL,
         ),
     )
     cached_n = cache.usage_metadata.total_token_count
-    write_cost = cached_n * PRICE_IN
+    write_cost = cached_n * gemini.PRICE_IN_STANDARD
     print(f'кеш: {cache.name}, {cached_n} токенов, запись ${write_cost:.4f}')
 
     try:
@@ -101,11 +61,10 @@ def main():
         cached_t = normal_t = out_t = 0
 
         for i, r in df.iterrows():
-            user_msg = (dynamic_template
-                        .replace('{TITLE}', r['title'] or '')
-                        .replace('{DESCRIPTION}', r['description'] or ''))
-            contents = [image_part(int(r['image_id'])), user_msg] if USE_IMAGES else user_msg
-            resp = call(client, cache.name, contents)
+            user_msg = gemini.fill_prompt(dynamic_template, r['title'], r['description'])
+            contents = ([gemini.image_part(int(r['image_id']), IMG_DIR), user_msg]
+                        if USE_IMAGES else user_msg)
+            resp = gemini.generate(client, cache.name, contents)
 
             cur_cached = resp.usage_metadata.cached_content_token_count or 0
             cur_in = (resp.usage_metadata.prompt_token_count or 0) - cur_cached
@@ -115,7 +74,7 @@ def main():
             out_t += cur_out
 
             raw = resp.text or ''
-            parsed, err = parse(raw)
+            parsed, err = gemini.parse_response(raw)
             biz_ok, biz_reason = is_business_valid(parsed) if parsed else (False, err)
             rows.append({
                 'item_id': r['item_id'],
@@ -131,19 +90,24 @@ def main():
                 'confidence': parsed.confidence if parsed else None,
             })
 
-            cost = write_cost + cached_t * PRICE_CACHED + normal_t * PRICE_IN + out_t * PRICE_OUT
-            print(f'{i+1}/{n}  parsed={parsed is not None}  biz={biz_ok}  ${cost:.4f}', end='\r')
+            cost = (write_cost
+                    + cached_t * gemini.PRICE_CACHED_STANDARD
+                    + normal_t * gemini.PRICE_IN_STANDARD
+                    + out_t * gemini.PRICE_OUT_STANDARD)
+            print(f'{i + 1}/{n}  parsed={parsed is not None}  biz={biz_ok}  ${cost:.4f}', end='\r')
             if cost > MAX_USD:
-                print('\n!! cost guard превышен')
+                print('\ncost guard превышен')
                 break
-            time.sleep(SLEEP)
+            time.sleep(SLEEP_SEC)
 
         out = pd.DataFrame(rows)
         out.to_parquet(OUT)
-        print()
-        print(f'\nсохранил {OUT}')
+        print(f'\n\nсохранил {OUT}')
         print(f'parsed_ok: {out["parsed_ok"].mean():.1%}, biz_ok: {out["biz_ok"].mean():.1%}')
-        cost = write_cost + cached_t * PRICE_CACHED + normal_t * PRICE_IN + out_t * PRICE_OUT
+        cost = (write_cost
+                + cached_t * gemini.PRICE_CACHED_STANDARD
+                + normal_t * gemini.PRICE_IN_STANDARD
+                + out_t * gemini.PRICE_OUT_STANDARD)
         print(f'токены: cached={cached_t} non-cached={normal_t} out={out_t}')
         print(f'cost: ${cost:.4f}')
 
@@ -160,15 +124,15 @@ def main():
             tp = ((df_ok['gold'] == lbl) & (df_ok['pred_label'] == lbl)).sum()
             n_pred = (df_ok['pred_label'] == lbl).sum()
             n_gold = (df_ok['gold'] == lbl).sum()
-            p = f'{tp}/{n_pred}={tp/n_pred*100:.0f}%' if n_pred else '-'
-            rc = f'{tp}/{n_gold}={tp/n_gold*100:.0f}%' if n_gold else '-'
+            p = f'{tp}/{n_pred}={tp / n_pred * 100:.0f}%' if n_pred else '-'
+            rc = f'{tp}/{n_gold}={tp / n_gold * 100:.0f}%' if n_gold else '-'
             print(f'  {lbl:30s}  P={p:15s}  R={rc}')
 
         wrong = df_ok[~df_ok['correct']]
         if len(wrong):
             print(f'\nошибок ({len(wrong)}):')
             for _, x in wrong.iterrows():
-                print(f'  [{x["gold"]}] → [{x["pred_label"]}]  conf={x["confidence"]:.2f}')
+                print(f'  [{x["gold"]}] -> [{x["pred_label"]}]  conf={x["confidence"]:.2f}')
                 print(f'    {x["title"][:70]}')
     finally:
         try:

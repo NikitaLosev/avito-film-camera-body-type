@@ -1,9 +1,9 @@
-"""Интерактивная ручная разметка audit_sample.parquet
+"""Ручная проверка audit_sample.parquet в Jupyter
 
-Запускай в VS Code interactive python или Jupyter (cell-by-cell через # %%)
-Цикл: смотришь карточку через show() -> agree/mark -> само переходит к следующей
+Цикл: смотришь карточку через show() -> agree() если модель угадала,
+mark() если нет -> перейдёт к следующей
 
-agree(i)              # модель угадала, просто копирует final_label в audit_label
+agree(i)              # модель права, копирует final_label в audit_label
 mark(i, 'slr')        # модель ошиблась, правильно SLR
 mark(i, 'other')      # правильно other_unknown
 """
@@ -20,7 +20,7 @@ assert (ROOT / 'data').exists(), f'запускай из корня проект
 AUDIT = ROOT / 'data' / 'labeling' / 'audit_sample.parquet'
 IMG_DIR = ROOT / 'data' / 'raw' / 'image'
 
-# короткие алиасы для аудит-метки
+# короткие алиасы для audit-метки
 LBL = {
     'slr': 'SLR',
     'tlr': 'TLR',
@@ -41,7 +41,7 @@ def show(i):
     desc = r.description[:600] if pd.notna(r.description) else '(пусто)'
     print(f'[{i}] {r.title}')
     print(desc)
-    print(f'\n→ модель пометила: {r.final_label}  (source={r.label_source}, conf={r.confidence:.2f})')
+    print(f'\nмодель пометила: {r.final_label}  (source={r.label_source}, conf={r.confidence:.2f})')
     path = IMG_DIR / str(r.image_id % 1000) / f'{r.image_id}.jpg'
     if path.exists():
         display(Image(filename=str(path), width=400))
@@ -61,7 +61,7 @@ def mark(i, code, notes=None):
         audit.loc[i, 'audit_notes'] = notes
     audit.to_parquet(AUDIT)
     left = audit['audit_label'].isna().sum()
-    flag = '✓' if label == audit.loc[i, 'final_label'] else '✗'
+    flag = '[ok]' if label == audit.loc[i, 'final_label'] else '[wrong]'
     print(f'[{i}] {flag} {label}    осталось {left}')
     new_i = next_idx()
     if new_i is not None:
@@ -78,10 +78,9 @@ i = next_idx()
 show(i)
 
 
-# %% размечать и идти дальше (гоняешь эту ячейку по кругу)
-# i = agree(i)                                      # если модель угадала
-# i = mark(i, 'slr')                                # если модель ошиблась → ставишь правильно
-# i = mark(i, 'other', notes='лот из 3 камер')      # с комментарием
+# %% размечать и идти дальше (эту ячейку гоняешь по кругу)
+# i = agree(i)                                      # модель угадала
+# i = mark(i, 'slr')                                # модель ошиблась, правильно SLR
+# i = mark(i, 'other', notes='лот из 3 камер')      # с пояснением
 i = agree(i)
-# %%
 # %%

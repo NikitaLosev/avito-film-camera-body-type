@@ -1,23 +1,25 @@
-"""Отбирает ~500 объявлений для ручной разметки
+"""Отбирает ~500 объявлений для ручной разметки в gold
 
-Стратифицирует выборку грубыми regex по title (slr/tlr/rangefinder/instant/compact)
-чтобы в gold попали все классы а не одни мыльницы и Instax
-Сохраняет gold.parquet с пустыми колонками разметки по схеме из data/taxonomy.yaml
+Случайной выборки мало - почти всё уйдёт в мыльницы и Instax, потому что они
+доминируют в категории. Поэтому стратифицируем по грубому regex на title:
+ловим SLR, TLR, дальномерки, инстант, компакт + добираем 'unknown' случайно
+
+Ограничение MAX_PER_USER чтобы не словить кучу объявлений от одного продавца
 """
 
 import re
+import sys
 from pathlib import Path
 
 import pandas as pd
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SRC = PROJECT_ROOT / 'data' / 'labeling' / 'items.parquet'
-DST = PROJECT_ROOT / 'data' / 'labeling' / 'gold.parquet'
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib.paths import GOLD, ITEMS
 
 SEED = 42
 MAX_PER_USER = 2
 
-# bucket -> (regex для стратификации, сколько строк брать)
+# bucket -> (regex для стратификации, квота)
 BUCKETS = {
     'slr':         (r'зенит|canon ae|nikon f[ma]|pentax k|minolta|olympus om', 80),
     'tlr':         (r'любитель|rolleiflex|yashica mat',                        80),
@@ -41,7 +43,7 @@ def detect_bucket(title):
 
 
 def main():
-    df = pd.read_parquet(SRC)
+    df = pd.read_parquet(ITEMS)
     df['bucket'] = df['title'].apply(detect_bucket)
 
     samples = [
@@ -57,10 +59,10 @@ def main():
     for col in LABEL_COLS:
         gold[col] = None
 
-    DST.parent.mkdir(parents=True, exist_ok=True)
-    gold[KEEP_COLS + LABEL_COLS].to_parquet(DST)
+    GOLD.parent.mkdir(parents=True, exist_ok=True)
+    gold[KEEP_COLS + LABEL_COLS].to_parquet(GOLD)
 
-    print(f'Записал {len(gold)} строк в {DST}')
+    print(f'записал {len(gold)} строк в {GOLD}')
     print(gold['bucket'].value_counts())
 
 

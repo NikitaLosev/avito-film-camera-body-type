@@ -1,60 +1,44 @@
-"""LLM cross-validation для KB-метченых строк (с vision)
+"""LLM-проверка по фото для строк где справочник kb уже поставил метку
 
-KB фундаментально text-only - не видит фото. Поэтому когда:
+Справочник работает только по тексту, фото он не видит. Поэтому если:
 - на фото лот из нескольких камер
-- на фото только чехол/коробка
-- на фото цифровая камера хотя в title плёночная модель
-- title бренд + модель но фото показывает что-то другое
+- на фото только чехол или коробка
+- в title плёночная модель, а на фото цифровая
+- title бренд + модель но на фото что-то другое
 
-KB ошибочно ставит метку камеры. Этот скрипт прогоняет vision LLM на все
-55k KB-метченые строки чтобы поймать такие false positives.
+kb всё равно ставит метку, и эта метка ошибочная. Прогоняем vision LLM по всем
+55k объявлений с kb-меткой чтобы поймать такие false positives и в decision.py
+демоутить их в other_unknown если LLM уверенно говорит 'это не плёночная камера'
 
-Output: llm_kb_check.parquet с теми же колонками что llm_labels.parquet.
-В decision.py: если LLM-vision проверка говорит "не валидная камера" с conf >= 0.85,
-KB-метка демоутится на other_unknown
+Параметры и логика идентичны stage_06: 25 потоков, Flex tier, кеш на 26 часов,
+atomic save каждые 200, retry с бэкоффом, идемпотентный рестарт
 """
 
 import os
-import random
 import sys
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
 from dotenv import load_dotenv
 from google import genai
-from google.genai import errors, types
+from google.genai import types
 from tqdm import tqdm
 
-sys.path.insert(0, str(Path(__file__).parent))
-from progress import atomic_write_parquet
-from schema import LabelResponse, is_business_valid
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib import gemini
+from lib.io import atomic_write_parquet
+from lib.paths import (ENV_FILE, IMG_DIR, ITEMS, KB_LABELS, LLM_KB_CHECK,
+                       PROMPT_ACTIVE)
+from lib.schema import is_business_valid
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-ITEMS = PROJECT_ROOT / 'data' / 'labeling' / 'items.parquet'
-KB_LABELS = PROJECT_ROOT / 'data' / 'labeling' / 'kb_labels.parquet'
-IMG_DIR = PROJECT_ROOT / 'data' / 'raw' / 'image'
-PROMPT = Path(__file__).parent / 'prompts' / 'v3_with_vision.md'
-DST = PROJECT_ROOT / 'data' / 'labeling' / 'llm_kb_check.parquet'
-
-MODEL = 'gemini-3.1-flash-lite'
 SERVICE_TIER = 'flex'
 CACHE_TTL = '93600s'
 
 MAX_WORKERS = 25
 SAVE_EVERY = 200
-RETRIES = 5
-
-PRICE_IN = 0.125 / 1e6
-PRICE_CACHED = 0.0125 / 1e6
-PRICE_OUT = 0.75 / 1e6
-PRICE_CACHE_WRITE = 0.25 / 1e6
 MAX_USD = 20.0
-
-BACKOFF_BASE = 10
-BACKOFF_MULT = 3
 
 COLS = ['item_id', 'raw', 'parsed_ok', 'biz_ok', 'biz_reason',
         'pred_status', 'pred_body', 'pred_label', 'confidence', 'error_msg']
@@ -63,42 +47,12 @@ _lock = threading.Lock()
 
 
 def load_todo():
+    """Берём только строки где kb поставил метку - именно их и проверяем по фото"""
     items = pd.read_parquet(ITEMS)
     kb = pd.read_parquet(KB_LABELS)
-    # только строки где KB поставил метку - их проверяем LLM-vision
     kb_matched = kb[kb['kb_label'].notna()]
     df = items.merge(kb_matched[['item_id', 'kb_label']], on='item_id')
     return df[['item_id', 'title', 'description', 'image_id', 'kb_label']].reset_index(drop=True)
-
-
-def parse(raw):
-    try:
-        return LabelResponse.model_validate_json(raw), None
-    except Exception as e:
-        return None, str(e)[:200]
-
-
-def call(client, cache_name, contents):
-    for attempt in range(RETRIES):
-        try:
-            return client.models.generate_content(
-                model=MODEL,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    cached_content=cache_name,
-                    response_mime_type='application/json',
-                    response_schema=LabelResponse,
-                    temperature=0,
-                    max_output_tokens=200,
-                    service_tier=SERVICE_TIER,
-                    http_options=types.HttpOptions(timeout=900_000),
-                ),
-            )
-        except errors.APIError:
-            if attempt == RETRIES - 1:
-                raise
-            wait = BACKOFF_BASE * (BACKOFF_MULT ** attempt) * random.uniform(0.7, 1.3)
-            time.sleep(wait)
 
 
 def process_row(client, cache_name, dynamic_template, item_id, title, description, image_id):
@@ -113,17 +67,17 @@ def process_row(client, cache_name, dynamic_template, item_id, title, descriptio
         row['error_msg'] = 'image_not_found'
         return row, 0, 0, 0
     try:
-        user_msg = dynamic_template.replace('{TITLE}', title or '').replace('{DESCRIPTION}', description or '')
-        resp = call(client, cache_name, [
+        user_msg = gemini.fill_prompt(dynamic_template, title, description)
+        resp = gemini.generate(client, cache_name, [
             types.Part.from_bytes(data=path.read_bytes(), mime_type='image/jpeg'),
             user_msg,
-        ])
+        ], service_tier=SERVICE_TIER)
         cached_n = resp.usage_metadata.cached_content_token_count or 0
         in_n = (resp.usage_metadata.prompt_token_count or 0) - cached_n
         out_n = resp.usage_metadata.candidates_token_count or 0
 
         raw = resp.text or ''
-        parsed, err = parse(raw)
+        parsed, err = gemini.parse_response(raw)
         row['raw'] = raw
         row['parsed_ok'] = parsed is not None
         if parsed:
@@ -144,34 +98,34 @@ def process_row(client, cache_name, dynamic_template, item_id, title, descriptio
 
 
 def main():
-    load_dotenv(PROJECT_ROOT / '.env')
+    load_dotenv(ENV_FILE)
     client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
 
     todo = load_todo()
-    if DST.exists():
-        acc = pd.read_parquet(DST)
+    if LLM_KB_CHECK.exists():
+        acc = pd.read_parquet(LLM_KB_CHECK)
         done_ids = set(acc[acc['parsed_ok'] & acc['biz_ok']]['item_id'])
     else:
         acc = pd.DataFrame(columns=COLS)
         done_ids = set()
     todo = todo[~todo['item_id'].isin(done_ids)]
-    print(f'KB-меченых всего: {len(todo) + len(done_ids)}, готово: {len(done_ids)}, todo: {len(todo)}')
+    print(f'kb-меченых всего: {len(todo) + len(done_ids)}, готово: {len(done_ids)}, todo: {len(todo)}')
     if len(todo) == 0:
         print('всё проверено, выхожу')
         return
 
-    template = PROMPT.read_text()
-    static_part, dynamic_template = template.split('# ОБЪЯВЛЕНИЕ ДЛЯ РАЗМЕТКИ')
+    template = PROMPT_ACTIVE.read_text()
+    static_part, dynamic_template = gemini.split_prompt(template)
 
     cache = client.caches.create(
-        model=MODEL,
+        model=gemini.MODEL,
         config=types.CreateCachedContentConfig(
-            system_instruction=static_part.strip(),
+            system_instruction=static_part,
             ttl=CACHE_TTL,
         ),
     )
     cached_tokens = cache.usage_metadata.total_token_count
-    cache_write_cost = cached_tokens * PRICE_CACHE_WRITE
+    cache_write_cost = cached_tokens * gemini.PRICE_CACHE_WRITE
     print(f'cache: {cache.name}, {cached_tokens} токенов, write ${cache_write_cost:.4f}')
     print(f'workers: {MAX_WORKERS}, service_tier: {SERVICE_TIER}, max_usd: ${MAX_USD}')
 
@@ -185,12 +139,15 @@ def main():
         with _lock:
             combined = pd.concat([acc, pd.DataFrame(pending)], ignore_index=True)
             combined = combined.drop_duplicates(subset='item_id', keep='last')
-            atomic_write_parquet(combined, DST)
+            atomic_write_parquet(combined, LLM_KB_CHECK)
             acc = combined
             pending.clear()
 
-    def cost():
-        return cache_write_cost + total['cached'] * PRICE_CACHED + total['in'] * PRICE_IN + total['out'] * PRICE_OUT
+    def current_cost():
+        return (cache_write_cost
+                + total['cached'] * gemini.PRICE_CACHED_FLEX
+                + total['in'] * gemini.PRICE_IN_FLEX
+                + total['out'] * gemini.PRICE_OUT_FLEX)
 
     ex = ThreadPoolExecutor(max_workers=MAX_WORKERS)
     cancelled = False
@@ -207,15 +164,18 @@ def main():
             total['in'] += i
             total['out'] += o
             pending.append(row)
-            bar.set_postfix(cost=f'${cost():.2f}', biz_ok=f'{sum(1 for r in pending if r["biz_ok"]) + len(acc)}')
+            bar.set_postfix(
+                cost=f'${current_cost():.2f}',
+                biz_ok=f'{sum(1 for r in pending if r["biz_ok"]) + len(acc)}',
+            )
             if len(pending) >= SAVE_EVERY:
                 flush()
-            if cost() > MAX_USD:
-                print(f'\n!! cost guard {MAX_USD} превышен')
+            if current_cost() > MAX_USD:
+                print(f'\ncost guard {MAX_USD} превышен')
                 cancelled = True
                 break
     except KeyboardInterrupt:
-        print('\n[Ctrl+C] сохраняю прогресс...')
+        print('\n[Ctrl+C] сохраняю прогресс')
         cancelled = True
     finally:
         if cancelled:
@@ -228,17 +188,24 @@ def main():
         except Exception:
             pass
 
-    final = pd.read_parquet(DST)
+    final = pd.read_parquet(LLM_KB_CHECK)
     parsed = final['parsed_ok'].sum()
     biz = final['biz_ok'].sum()
-    print(f'\nитого {len(final)}, parsed_ok: {parsed} ({parsed/len(final):.1%}), biz_ok: {biz} ({biz/len(final):.1%})')
-    print(f'cost: ${cost():.4f}, токены: cached={total["cached"]:,} in={total["in"]:,} out={total["out"]:,}')
+    print(f'\nитого {len(final)}, parsed_ok: {parsed} ({parsed / len(final):.1%}), '
+          f'biz_ok: {biz} ({biz / len(final):.1%})')
+    print(f'cost: ${current_cost():.4f}, токены: '
+          f'cached={total["cached"]:,} in={total["in"]:,} out={total["out"]:,}')
 
-    # сколько KB-меток будет демоутиться
-    not_valid = final[(final['pred_status'].notna()) & (final['pred_status'] != 'valid_single_film_camera') & (final['confidence'] >= 0.85)]
+    # прикидываем сколько kb-меток будет демоутиться на следующем этапе
+    not_valid = final[
+        (final['pred_status'].notna())
+        & (final['pred_status'] != 'valid_single_film_camera')
+        & (final['confidence'] >= 0.85)
+    ]
     print(f'\nпредварительный анализ:')
-    print(f'  LLM-vision сказал "не валидная камера" с conf >= 0.85: {len(not_valid)} строк ({len(not_valid)/len(final)*100:.1f}%)')
-    print(f'  эти KB-метки будут демоутиться в other_unknown')
+    print(f'  LLM-vision сказал "не валидная камера" с conf >= 0.85: '
+          f'{len(not_valid)} строк ({len(not_valid) / len(final) * 100:.1f}%)')
+    print('  эти kb-метки демоутятся в other_unknown на этапе decision')
 
 
 if __name__ == '__main__':

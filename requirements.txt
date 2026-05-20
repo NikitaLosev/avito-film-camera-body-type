@@ -6,3 +6,4 @@ pyyaml
 google-genai
 pydantic
 tqdm
+ipython
