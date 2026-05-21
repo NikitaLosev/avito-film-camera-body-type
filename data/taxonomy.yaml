@@ -1,0 +1,152 @@
+# Классы для разметки и схема итоговой таблицы
+
+project: film-camera-body-type
+category: 'Электроника / Фототехника / Плёночные фотоаппараты'
+target_attribute: film_camera_body_type
+
+
+# Первый уровень: что вообще за объект в объявлении
+# Нужен чтобы отделить ошибки "не та камера" от ошибок "вообще не камера, лот, коробка"
+# Если object_status не valid_single_film_camera - body_type не ставим
+object_status:
+
+  valid_single_film_camera:
+    description: 'Одна плёночная камера в объявлении, можно понять тип корпуса'
+
+  multi_camera_lot:
+    description: 'Несколько камер в одном объявлении, особенно разных типов'
+    examples:
+      - 'лот из Зенитов и Смен'
+      - 'набор камер СССР'
+
+  accessory_or_part:
+    description: 'Только аксессуар или часть камеры: объектив, вспышка, ремень, чехол, крышка, экспонометр'
+
+  film_or_consumable:
+    description: 'Расходник без камеры: плёнка, кассета, картридж, химия, фотобумага'
+
+  digital_camera:
+    description: 'Цифровая камера, попала в категорию плёночных по ошибке'
+
+  box_manual_packaging:
+    description: 'Только коробка, инструкция или упаковка, без самой камеры'
+
+  not_camera:
+    description: 'Вообще не камера и не аксессуар к ней'
+
+  insufficient_info:
+    description: 'По тексту и фото нельзя надёжно понять тип корпуса (текст бедный, фото ничего не даёт)'
+
+  image_unavailable:
+    description: 'Главное фото битое или недоступно, а одного текста для решения не хватает'
+
+  conflicting_evidence:
+    description: 'Текст и фото явно противоречат друг другу, непонятно чему верить'
+
+
+# Второй уровень: тип корпуса валидной плёночной камеры
+body_type:
+
+  SLR:
+    description: 'Однообъективная зеркальная плёночная камера'
+    visual_markers: 'Призменный выступ сверху, объектив по центру'
+    examples:
+      - 'Зенит TTL'
+      - 'Nikon FM'
+      - 'Canon EOS'
+
+  TLR:
+    description: 'Двухобъективная зеркальная плёночная камера'
+    visual_markers: 'Две линзы одна над другой'
+    examples:
+      - 'Любитель'
+      - 'Rolleiflex'
+      - 'Yashica Mat'
+
+  rangefinder_viewfinder:
+    description: 'Дальномерная, шкальная или простая видоискательная камера без зеркальной призмы. Дальномерная и видоискательная объединены в один класс - по фото их часто не различить без знания модели'
+    visual_markers: 'Плоский корпус, отдельное окно видоискателя'
+    examples:
+      - 'Зоркий 6'
+      - 'Leica III'
+
+  compact_point_and_shoot:
+    description: 'Компактная автоматическая плёночная камера (мыльница), включая одноразовые'
+    visual_markers: 'Небольшой корпус, встроенная вспышка, простая форма'
+    examples:
+      - 'Olympus mju II'
+
+  instant:
+    description: 'Камера моментальной печати (Polaroid, Instax)'
+    visual_markers: 'Широкий корпус, слот выхода фото'
+    examples:
+      - 'Polaroid'
+      - 'Instax'
+
+
+# Финальная метка для модели
+# Все невалидные и спорные случаи сворачиваются в other_unknown
+final_label:
+  rules:
+    - 'object_status == valid_single_film_camera И body_type задан -> final_label = body_type'
+    - 'иначе -> final_label = other_unknown'
+
+  values:
+    - SLR
+    - TLR
+    - rangefinder_viewfinder
+    - compact_point_and_shoot
+    - instant
+    - other_unknown
+
+
+# Схема таблицы разметки (gold.parquet и labels_final.parquet)
+dataset_schema:
+
+  - name: item_id
+    type: string
+    description: 'ID объявления из исходного CSV, первичный ключ'
+
+  - name: user_id
+    type: string
+    description: 'ID продавца, нужен для group split (не как фича)'
+
+  - name: title
+    type: string
+    description: 'Заголовок объявления, копия из CSV для удобства разметки'
+
+  - name: description
+    type: string
+    description: 'Описание объявления, копия из CSV'
+
+  - name: image_id
+    type: int64
+    description: 'ID картинки, путь к файлу: data/raw/image/{image_id % 1000}/{image_id}.jpg'
+
+  - name: object_status
+    type: category
+    description: 'Первый уровень разметки (см. секцию object_status выше)'
+
+  - name: body_type
+    type: category_nullable
+    description: 'Второй уровень разметки, null если object_status != valid_single_film_camera'
+
+  - name: final_label
+    type: category
+    description: 'Финальная метка для модели (см. секцию final_label выше)'
+
+  - name: model_name
+    type: string_nullable
+    description: 'Извлечённая модель камеры если очевидна, накапливается в kb.yaml'
+
+  - name: evidence
+    type: string_nullable
+    description: 'Короткое объяснение метки: "Зенит TTL в заголовке", "призменный выступ на фото", "в объявлении лот"'
+
+  - name: label_source
+    type: category
+    description: 'Источник метки: human / kb / rules / llm / review'
+
+  - name: confidence
+    type: float
+    description: 'Уверенность метки от 0 до 1, для ручной разметки всегда 1.0'

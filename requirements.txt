@@ -1,0 +1,9 @@
+boto3
+python-dotenv
+pandas
+pyarrow
+pyyaml
+google-genai
+pydantic
+tqdm
+ipython
