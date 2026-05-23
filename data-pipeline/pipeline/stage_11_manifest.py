@@ -15,8 +15,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib.io import read_state
-from lib.paths import (AUDIT_SAMPLE, GOLD, GOLD_DEV, GOLD_HOLDOUT, ITEMS,
-                       KB_LABELS, KB_YAML, LABELING_DIR, LABELS_FINAL,
+from lib.paths import (AUDIT_SAMPLE, EDA_DATASET, GOLD, GOLD_DEV, GOLD_HOLDOUT,
+                       ITEMS, KB_LABELS, KB_YAML, LABELING_DIR, LABELS_FINAL,
                        MANIFEST, PROJECT_ROOT, PROMPT_ACTIVE, RAW_CSV,
                        TAXONOMY)
 
@@ -72,6 +72,7 @@ def main():
             'labels_final': artifact(LABELS_FINAL,
                                      parent=['gold_parquet', 'kb_labels', 'llm_labels']),
             'audit_sample': artifact(AUDIT_SAMPLE, parent='labels_final'),
+            'eda_dataset': artifact(EDA_DATASET, parent=['labels_final', 'items_parquet']),
         },
     }
 

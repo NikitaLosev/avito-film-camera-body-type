@@ -7,3 +7,11 @@ google-genai
 pydantic
 tqdm
 ipython
+matplotlib
+seaborn
+pillow
+plotly
+scipy
+scikit-learn
+nbformat
+jinja2

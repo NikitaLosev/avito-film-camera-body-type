@@ -6,6 +6,9 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Jupyter
+.ipynb_checkpoints/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -230,3 +233,6 @@ data/*
 !data/taxonomy.yaml
 !data/decision_rules.md
 !data/manifest.yaml
+
+# EDA cache
+eda/_cache/

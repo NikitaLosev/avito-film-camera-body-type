@@ -21,9 +21,10 @@ LLM_LABELS = LABELING_DIR / 'llm_labels.parquet'
 LLM_KB_CHECK = LABELING_DIR / 'llm_kb_check.parquet'
 AUDIT_SAMPLE = LABELING_DIR / 'audit_sample.parquet'
 
-# финальный артефакт для обучения
+# финальные артефакты для обучения
 TRAINING_DIR = PROJECT_ROOT / 'data' / 'training'
 LABELS_FINAL = TRAINING_DIR / 'labels_final.parquet'
+EDA_DATASET = TRAINING_DIR / 'data_eda.parquet'
 
 # схема, правила, манифест
 TAXONOMY = PROJECT_ROOT / 'data' / 'taxonomy.yaml'
