@@ -7,9 +7,9 @@
 
 ```
 data-pipeline/
-├── pipeline/         основной пайплайн, 11 пронумерованных стейджей
+├── pipeline/         основной пайплайн, 12 пронумерованных стейджей
 ├── lib/              общий код: пути, нормализация моделей, схема ответа LLM, обёртка над Gemini
-├── prompts/          промпты для LLM, активный $-$ v3_with_vision
+├── prompts/          промпты для LLM, активный - v3_with_vision
 ├── tools/            вспомогательные скрипты: ручная разметка, калибровка промпта
 ├── reflection.md     рефлексия по этапу разметки
 └── README.md         этот файл
@@ -32,7 +32,8 @@ data-pipeline/
 
 | артефакт | для чего |
 |---|---|
-| `data/training/labels_final.parquet` | финальный датасет, 144 313 строк, 20 колонок |
+| `data/training/labels_final.parquet` | финальный датасет меток, 144 313 строк, 20 колонок |
+| `data/training/data_eda.parquet` | labels_final + title / description / user_id, рабочий артефакт для EDA, 23 колонки |
 | `data/manifest.yaml` | sha256 всех артефактов и граф parent -> child для воспроизводимости |
 | `data/labeling/items.parquet` | csv после `ingest`, базовая таблица для всего |
 | `data/labeling/gold.parquet` | ручная разметка 471 строки |
@@ -83,12 +84,15 @@ items_project_aaa.csv + image/  (RustFS)
         |
         v
    stage_11_manifest           sha256 всех артефактов -> manifest.yaml
+        |
+        v
+   stage_12_attach_text        labels_final + title/description/user_id -> data_eda.parquet
 ```
 
 
 ## Стадии пайплайна
 
-Все 11 файлов лежат в `pipeline/`, пронумерованы по порядку запуска. Каждый идемпотентный $-$ повторный запуск даёт тот же артефакт. Длинные стейджи (06 и 07, где работает LLM на десятках тысяч строк) пишут parquet через `.tmp` + `os.replace`, поэтому Ctrl+C не побьёт файл, и при следующем запуске они продолжат с того места где остановились
+Все 12 файлов лежат в `pipeline/`, пронумерованы по порядку запуска. Каждый идемпотентный $-$ повторный запуск даёт тот же артефакт. Длинные стейджи (06 и 07, где работает LLM на десятках тысяч строк) пишут parquet через `.tmp` + `os.replace`, поэтому Ctrl+C не побьёт файл, и при следующем запуске они продолжат с того места где остановились
 
 | стейдж | что делает | вход | выход |
 |---|---|---|---|
@@ -103,6 +107,7 @@ items_project_aaa.csv + image/  (RustFS)
 | 09 audit_sample | случайные 210 строк (35 на класс) под ручной аудит | `labels_final.parquet` | `audit_sample.parquet` |
 | 10 audit_eval | метрики precision по заполненному руками аудиту | `audit_sample.parquet` + `labels_final.parquet` | stdout |
 | 11 manifest | sha256 всех артефактов и parent-связи | все артефакты | `manifest.yaml` |
+| 12 attach_text | подмешивает title / description / user_id к финальным меткам для EDA | `labels_final.parquet` + `items.parquet` | `data_eda.parquet` |
 
 
 ## Общий код в lib
@@ -215,6 +220,7 @@ python data-pipeline/pipeline/stage_09_audit_sample.py
 # тут руками проверяем аудит через tools/label_audit.py в Jupyter
 python data-pipeline/pipeline/stage_10_audit_eval.py
 python data-pipeline/pipeline/stage_11_manifest.py
+python data-pipeline/pipeline/stage_12_attach_text.py
 ```
 
 Любой стейдж можно прервать Ctrl+C и запустить заново $-$ длинные продолжат с того же места, короткие просто перепишут свой parquet
