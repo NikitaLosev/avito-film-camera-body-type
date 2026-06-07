@@ -18,8 +18,7 @@ from google.genai import types
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import gemini
-from lib.paths import (ENV_FILE, GOLD_HOLDOUT, IMG_DIR, PROJECT_ROOT,
-                       PROMPTS_DIR)
+from lib.paths import ENV_FILE, GOLD_HOLDOUT, IMG_DIR, PROJECT_ROOT, PROMPTS_DIR
 from lib.schema import is_business_valid
 
 PROMPT_NAME = sys.argv[1] if len(sys.argv) > 1 else 'v3_with_vision'

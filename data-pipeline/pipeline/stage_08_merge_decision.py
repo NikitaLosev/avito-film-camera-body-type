@@ -24,8 +24,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib.io import atomic_write_parquet
-from lib.paths import (GOLD, ITEMS, KB_LABELS, LABELS_FINAL, LLM_KB_CHECK,
-                       LLM_LABELS)
+from lib.paths import GOLD, ITEMS, KB_LABELS, LABELS_FINAL, LLM_KB_CHECK, LLM_LABELS
 
 LLM_CONFIDENCE_MIN = 0.7
 KB_DEMOTE_CONFIDENCE = 0.85

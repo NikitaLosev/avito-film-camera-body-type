@@ -1,5 +1,6 @@
 boto3
 python-dotenv
+numpy
 pandas
 pyarrow
 pyyaml
@@ -13,5 +14,13 @@ pillow
 plotly
 scipy
 scikit-learn
+joblib
+catboost==1.2.10
+lightgbm==4.6.0
 nbformat
 jinja2
+mlflow==3.12.0
+
+# линтеры (код-стайл)
+ruff==0.15.16
+flake8==7.3.0

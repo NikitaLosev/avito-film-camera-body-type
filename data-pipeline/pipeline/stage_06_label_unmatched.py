@@ -25,8 +25,7 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import gemini
 from lib.io import atomic_write_parquet
-from lib.paths import (ENV_FILE, IMG_DIR, ITEMS, KB_LABELS, LLM_LABELS,
-                       PROMPT_ACTIVE)
+from lib.paths import ENV_FILE, IMG_DIR, ITEMS, KB_LABELS, LLM_LABELS, PROMPT_ACTIVE
 from lib.schema import is_business_valid
 
 SERVICE_TIER = 'flex'

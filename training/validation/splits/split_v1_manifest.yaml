@@ -1,0 +1,66 @@
+split_id: split_v1
+seed: 42
+ratios:
+  train: 0.7
+  val: 0.15
+  test: 0.15
+leakage_keys:
+- user_id
+- sha256
+- dhash
+- text_hash
+data_sha256: 11d9d547c3e4c888776e244181fc6cff237ded98094ff2e90eecd74353ef8978
+n_rows_total: 144313
+n_leakage_groups: 93451
+per_split:
+  train:
+    n_rows: 103039
+    row_share: 0.714
+    n_leakage_groups: 73927
+    class_counts:
+      SLR: 16666
+      TLR: 1049
+      rangefinder_viewfinder: 17987
+      compact_point_and_shoot: 29865
+      instant: 17229
+      other_unknown: 20243
+    tlr_rows: 1049
+  val:
+    n_rows: 19195
+    row_share: 0.133
+    n_leakage_groups: 18846
+    class_counts:
+      SLR: 2881
+      TLR: 188
+      rangefinder_viewfinder: 3248
+      compact_point_and_shoot: 5378
+      instant: 3801
+      other_unknown: 3699
+    tlr_rows: 188
+  test:
+    n_rows: 22079
+    row_share: 0.153
+    n_leakage_groups: 678
+    class_counts:
+      SLR: 4687
+      TLR: 642
+      rangefinder_viewfinder: 3838
+      compact_point_and_shoot: 7946
+      instant: 1772
+      other_unknown: 3194
+    tlr_rows: 642
+leakage_overlaps:
+  train_val_user_id: 0
+  train_test_user_id: 0
+  val_test_user_id: 0
+  train_val_sha256: 0
+  train_test_sha256: 0
+  val_test_sha256: 0
+  train_val_dhash: 0
+  train_test_dhash: 0
+  val_test_dhash: 0
+  train_val_text_hash: 0
+  train_test_text_hash: 0
+  val_test_text_hash: 0
+audit_in_test: 210
+gold_in_test: 471

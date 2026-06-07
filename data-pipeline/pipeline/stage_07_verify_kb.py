@@ -29,8 +29,7 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import gemini
 from lib.io import atomic_write_parquet
-from lib.paths import (ENV_FILE, IMG_DIR, ITEMS, KB_LABELS, LLM_KB_CHECK,
-                       PROMPT_ACTIVE)
+from lib.paths import ENV_FILE, IMG_DIR, ITEMS, KB_LABELS, LLM_KB_CHECK, PROMPT_ACTIVE
 from lib.schema import is_business_valid
 
 SERVICE_TIER = 'flex'
@@ -202,7 +201,7 @@ def main():
         & (final['pred_status'] != 'valid_single_film_camera')
         & (final['confidence'] >= 0.85)
     ]
-    print(f'\nпредварительный анализ:')
+    print('\nпредварительный анализ:')
     print(f'  LLM-vision сказал "не валидная камера" с conf >= 0.85: '
           f'{len(not_valid)} строк ({len(not_valid) / len(final) * 100:.1f}%)')
     print('  эти kb-метки демоутятся в other_unknown на этапе decision')

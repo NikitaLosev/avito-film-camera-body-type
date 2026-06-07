@@ -1,0 +1,20 @@
+[tool.ruff]
+line-length = 120
+# ноутбуки (*.ipynb) - разведка, не линтуем их клетки; артефакты/стор - не код
+extend-exclude = [".venv", "*.ipynb", "training/artifacts", "training/notebooks", "training/tracking/store"]
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I isort, Q flake8-quotes (одинарные кавычки - стиль проекта)
+select = ["E", "F", "W", "I", "Q"]
+# E402: локальные импорты идут ПОСЛЕ sys.path.insert (так модули резолвятся без установки пакета) - это by design
+ignore = ["E402"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+docstring-quotes = "double"
+multiline-quotes = "single"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+# settings.py (frozen) ре-экспортит пути из lib.paths -> F401 здесь ожидаем, удалять нельзя
+"training/validation/settings.py" = ["F401"]
