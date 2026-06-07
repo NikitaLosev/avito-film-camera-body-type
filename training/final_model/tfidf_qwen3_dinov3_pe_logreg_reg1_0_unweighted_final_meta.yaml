@@ -1,0 +1,53 @@
+name: tfidf+qwen3+dinov3+pe+logreg__reg1.0_unweighted__final
+champion_config: lrgrid__c1.0__none
+trained_on: train+val
+held_out: test+audit (не трогали)
+n_train_refit: 122234
+n_test: 22079
+tau: 0.0
+labels:
+- SLR
+- TLR
+- rangefinder_viewfinder
+- compact_point_and_shoot
+- instant
+- other_unknown
+head:
+  kind: logreg
+  C: 1.0
+  class_weight: null
+feature_order:
+- block: tfidf
+  dim: 50000
+  scaling: none
+- block: text_emb
+  model: Qwen/Qwen3-Embedding-0.6B
+  dim: 1024
+  scaling: l2
+- block: image_emb
+  source: dinov3
+  model: facebook/dinov3-vits16-pretrain-lvd1689m
+  dim: 384
+  scaling: l2
+- block: image_emb
+  source: pe
+  model: timm/PE-Core-L-14-336
+  dim: 1024
+  scaling: l2
+total_dim: 52432
+split_data_sha256: 11d9d547c3e4c888776e244181fc6cff237ded98094ff2e90eecd74353ef8978
+held_out_metrics:
+  test_proxy:
+    CAR: 0.8350921690293944
+    AER: 0.03733096642823579
+    AER_hi: 0.04010987384058068
+    A: 19153
+    C: 18438
+    W: 715
+  test_audit:
+    CAR: 0.7476190476190476
+    AER: 0.024844720496894408
+    AER_hi: 0.06213330741266006
+    A: 161
+    C: 157
+    W: 4

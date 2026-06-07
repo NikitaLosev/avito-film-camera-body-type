@@ -236,3 +236,17 @@ data/*
 
 # EDA cache
 eda/_cache/
+
+# MLflow store (sqlite + артефакты), отчёт выгружается в training/reports/*.csv
+training/tracking/store/
+
+# личный журнал этапа обучения
+training/log.md
+
+# артефакты обучения (эмбеддинги, предсказания, бандлы) - крупные, регенерируемы, в mlflow
+# код (src, notebooks) и отчёты (reports/*.csv,*.md) остаются в git
+# финальный бандл головы лежит отдельно в training/final_model/ (в git)
+training/artifacts/
+
+# побочные логи обучения catboost
+catboost_info/
