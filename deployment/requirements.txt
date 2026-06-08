@@ -1,0 +1,14 @@
+fastapi[all]
+scikit-learn==1.8.0
+numpy
+scipy
+joblib
+pillow
+httpx
+python-dotenv
+torch
+transformers
+sentence-transformers
+open_clip_torch
+prometheus-client
+prometheus-fastapi-instrumentator

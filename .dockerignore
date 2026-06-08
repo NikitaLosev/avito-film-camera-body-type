@@ -1,0 +1,25 @@
+# build-context = корень репо, образу нужны только training/final_model и deployment
+
+.git
+.env
+.venv
+.ruff_cache
+**/__pycache__/
+*.pyc
+.DS_Store
+
+# данные и другие этапы - в образ не нужны
+data/
+data-pipeline/
+eda/
+problem-validation/
+solution-design/
+
+# из training нужен только final_model (бандл + meta)
+training/*
+!training/final_model
+
+# журнал этапа и тяжёлые форматы
+deployment/log.md
+**/*.parquet
+**/*.ipynb
