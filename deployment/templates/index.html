@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Тип корпуса плёночной камеры — Авито</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root { --avito: #0099f8; }
+      body { background: #f3f4f6; }
+      .btn-avito { background: var(--avito); border-color: var(--avito); color: #fff; font-weight: 600; }
+      .btn-avito:hover, .btn-avito:focus { background: #0a86d6; border-color: #0a86d6; color: #fff; }
+      .card { border: 0; border-radius: 14px; }
+      .progress-bar { background: var(--avito); }
+      .result-photo { max-height: 220px; border-radius: 12px; object-fit: cover; }
+      .prob-row + .prob-row { margin-top: .35rem; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar bg-white border-bottom py-3">
+      <div class="container">
+        <a class="navbar-brand" href="/"><img src="/static/avito.svg" alt="Avito" height="26" /></a>
+        <span class="text-muted small">Плёночные фотоаппараты</span>
+      </div>
+    </nav>
+
+    <main class="container py-4" style="max-width: 1080px">
+      <div class="mb-4">
+        <h1 class="h3 fw-bold mb-1">Тип корпуса плёночной камеры</h1>
+        <p class="text-muted mb-0">
+          Загрузите фото камеры и заголовок объявления или вставьте ссылку на Авито — сервис определит
+          тип корпуса: зеркальная, дальномерная, компактная, двухобъективная или моментальная
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <!-- форма -->
+        <div class="col-lg-6">
+          <div class="card shadow-sm">
+            <div class="card-body p-4">
+              <h5 class="card-title mb-4">Объявление</h5>
+              <form method="post" action="/" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Заголовок</label>
+                  <input type="text" name="title" class="form-control" placeholder="Например: Зенит TTL" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Описание</label>
+                  <textarea name="description" rows="3" class="form-control" placeholder="Состояние, комплект, модель…"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Фото камеры</label>
+                  <input type="file" name="photos" accept="image/*" class="form-control" />
+                </div>
+                <div class="text-center text-muted small my-2">— или —</div>
+                <div class="mb-4">
+                  <label class="form-label fw-semibold">Ссылка на объявление Авито</label>
+                  <input type="url" name="url" class="form-control" placeholder="https://www.avito.ru/…" />
+                  <div class="form-text">Если загружено фото камеры, ссылка не используется</div>
+                </div>
+                <button type="submit" class="btn btn-avito w-100 py-2">Определить тип</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- результат -->
+        <div class="col-lg-6">
+          {% if result and result.probabilities %}
+          <div class="card shadow-sm">
+            <div class="card-body p-4">
+              <h6 class="text-uppercase text-muted small mb-3">Результат</h6>
+              {% if image_src %}
+              <div class="text-center mb-3">
+                <img src="{{ image_src }}" class="result-photo" alt="фото камеры" />
+              </div>
+              {% endif %}
+              <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                <span class="h3 mb-0">{{ labels_ru.get(result.value, result.value) }}</span>
+                {% if result.decision == 'auto_fill' %}
+                <span class="badge text-bg-success">Можно заполнить</span>
+                {% else %}
+                <span class="badge text-bg-secondary">Лучше оставить пустым</span>
+                {% endif %}
+              </div>
+              <div class="text-muted small mb-3">
+                <code>{{ result.value }}</code>
+                · уверенность {{ ('%.1f'|format(result.confidence * 100))|replace('.', ',') }}%
+                · {{ reasons_ru.get(result.reason, result.reason) }}
+              </div>
+              {% for label, p in result.probabilities|dictsort(by='value', reverse=true) %}
+              <div class="prob-row d-flex align-items-center">
+                <div class="small {% if label == result.value %}fw-semibold{% endif %}" style="width: 210px">
+                  {{ labels_ru.get(label, label) }}
+                </div>
+                <div class="progress flex-grow-1" style="height: 12px">
+                  <div class="progress-bar" role="progressbar" style="width: {{ (p * 100)|round(1) }}%"></div>
+                </div>
+                <div class="small text-end ps-2" style="width: 56px">
+                  {{ ('%.1f'|format(p * 100))|replace('.', ',') }}%
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% elif result %}
+          <div class="card shadow-sm">
+            <div class="card-body p-4 text-center">
+              <h6 class="text-uppercase text-muted small mb-3">Результат</h6>
+              {% if result.reason == 'photo_required' %}
+              <div class="h4 mb-2">Нужно фото</div>
+              <p class="text-muted mb-0">Добавьте фото камеры или вставьте ссылку на объявление — без фото сервис не угадывает</p>
+              {% else %}
+              <div class="h4 mb-2">Не удалось открыть объявление</div>
+              <p class="text-muted mb-0">Проверьте ссылку или загрузите фото вручную</p>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <div class="card shadow-sm">
+            <div class="card-body p-4">
+              <h6 class="text-uppercase text-muted small mb-3">Типы корпусов</h6>
+              <ul class="list-unstyled mb-0 small">
+                <li class="mb-2"><span class="fw-semibold">Зеркальная (SLR)</span> — видоискатель смотрит через объектив, внутри зеркало и призма</li>
+                <li class="mb-2"><span class="fw-semibold">Двухобъективная (TLR)</span> — два объектива друг над другом</li>
+                <li class="mb-2"><span class="fw-semibold">Дальномерная</span> — наводка на резкость по дальномеру, без зеркала</li>
+                <li class="mb-2"><span class="fw-semibold">Компактная «мыльница»</span> — простая автоматическая, «навёл и снял»</li>
+                <li class="mb-2"><span class="fw-semibold">Моментальная</span> — печатает снимок сразу, Polaroid и Instax</li>
+                <li><span class="fw-semibold">Не определено</span> — на фото не камера, лот из нескольких или данных мало</li>
+              </ul>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </main>
+
+    <footer class="container py-4 text-center text-muted small">© 2026 Академия Аналитиков Авито</footer>
+  </body>
+</html>

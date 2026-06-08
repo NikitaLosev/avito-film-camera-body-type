@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: film_camera_service
+    # film-service публикует 8010 на хост; Prometheus из контейнера ходит через host.docker.internal
+    static_configs:
+      - targets: ['host.docker.internal:8010']

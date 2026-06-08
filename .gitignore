@@ -250,3 +250,6 @@ training/artifacts/
 
 # побочные логи обучения catboost
 catboost_info/
+
+# журнал этапа сервиса (временный, для отчёта)
+deployment/log.md
