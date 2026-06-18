@@ -190,7 +190,8 @@ Swagger доступен на `/docs`, ReDoc - на `/redoc`. Основные �
 
 Сервис отдаёт метрики на `GET /metrics`: число запросов, задержку, уверенность модели, загруженность
 модели и HTTP-статусы. Эти же метрики с живого Space круглосуточно собирает такой же стек на отдельном
-сервере - дашборд открыт на http://82.223.121.172:3000 без логина. Локальный стек поднимается так:
+сервере - дашборд открыт на http://82.223.121.172:3000 как анонимный read-only (роль Viewer), админ-пароль
+задаётся переменной `GRAFANA_ADMIN_PASSWORD`. Локальный стек поднимается так:
 
 ```bash
 cd deployment/monitoring
@@ -203,7 +204,7 @@ docker compose up -d
 |---|---|
 | сервис | http://localhost:8010 |
 | Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3001 (admin / admin) |
+| Grafana | http://localhost:3001 (admin / пароль из `GRAFANA_ADMIN_PASSWORD`) |
 
 В Grafana один раз добавляем Prometheus с URL `http://prometheus:9090` и импортируем
 `grafana/film_camera_service.json`. На дашборде 12 панелей: запросы, ошибки, классы, `auto_fill` / `abstain`,

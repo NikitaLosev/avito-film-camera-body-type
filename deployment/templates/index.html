@@ -42,7 +42,7 @@
           <div class="card shadow-sm">
             <div class="card-body p-4">
               <h5 class="card-title mb-4">Объявление</h5>
-              <form method="post" action="/" enctype="multipart/form-data">
+              <form method="post" action="/" enctype="multipart/form-data" id="predict-form">
                 <div class="mb-3">
                   <label class="form-label fw-semibold">Заголовок</label>
                   <input type="text" name="title" class="form-control" placeholder="Например: Зенит TTL" />
@@ -61,7 +61,10 @@
                   <input type="url" name="url" class="form-control" placeholder="https://www.avito.ru/…" />
                   <div class="form-text">Если загружено фото камеры, ссылка не используется</div>
                 </div>
-                <button type="submit" class="btn btn-avito w-100 py-2">Определить тип</button>
+                <div id="form-error" class="alert alert-warning py-2 small d-none" role="alert">
+                  Загрузите фото камеры или вставьте ссылку на объявление
+                </div>
+                <button type="submit" id="submit-btn" class="btn btn-avito w-100 py-2">Определить тип</button>
               </form>
             </div>
           </div>
@@ -139,5 +142,27 @@
     </main>
 
     <footer class="container py-4 text-center text-muted small">© 2026 Академия Аналитиков Авито</footer>
+
+    <script>
+      // до отправки: проверяем, что есть фото или ссылка; на сабмите показываем лоадер
+      (function () {
+        var form = document.getElementById('predict-form');
+        var btn = document.getElementById('submit-btn');
+        var err = document.getElementById('form-error');
+        form.addEventListener('submit', function (e) {
+          var hasPhoto = form.querySelector('input[name=photos]').files.length > 0;
+          var hasUrl = form.querySelector('input[name=url]').value.trim() !== '';
+          if (!hasPhoto && !hasUrl) {
+            e.preventDefault();
+            err.classList.remove('d-none');
+            return;
+          }
+          err.classList.add('d-none');
+          btn.disabled = true;
+          btn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Определяем…';
+        });
+      })();
+    </script>
   </body>
 </html>

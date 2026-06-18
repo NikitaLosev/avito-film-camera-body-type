@@ -46,7 +46,7 @@ LABELS_RU = {
     'other_unknown': 'Не определено',
 }
 REASONS_RU = {
-    'model_argmax': 'определено по фото и тексту',
+    'model_argmax': 'определено моделью',
     'model_abstained': 'модель не уверена',
     'photo_required': 'нужно фото',
     'input_unavailable': 'не удалось открыть объявление',
